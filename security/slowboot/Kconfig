@@ -1,0 +1,9 @@
+config SECURITY_SLOWBOOT
+        tristate "Enable Slowboot Full System Cryptographic Integrity Check"
+        default false
+        help
+          Provides a Mechanism to validate all installed binaries/libraries
+          with a simple file format that can be turned into a Kernel Module
+          that is then encrypted with a TPM decrypted on boot and signed 
+          or just signed.
+
