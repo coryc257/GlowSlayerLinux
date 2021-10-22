@@ -1527,7 +1527,7 @@ typedef struct slowboot_validation_item {
 //##########TEMPLATE_PARM_ST##################################################=>
 typedef struct slowboot_tinfoil {
 	struct kstat *st;
-	slowboot_validation_item validation_items[33];
+	slowboot_validation_item validation_items[34];
 	int failures;
 } slowboot_tinfoil;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1567,6 +1567,8 @@ static int tinfoil_open(slowboot_validation_item *item)
 			item->hash, 
 			item->path, 
 			item->is_ok);
+		// Should absense indicate failure?
+		//item->pos = 1;
 		return -1;
 	}
 	item->pos = 0;
@@ -1678,9 +1680,16 @@ static int tinfoil_unwrap (slowboot_validation_item *item)
 		return -1;
 	
 	tinfoil_check(item);
-	printk(KERN_INFO "File:%s:%s\n", 
-	       item->path, 
-	       (item->is_ok == 0 ? "PASS" : "FAIL"));	
+	
+	if (item->is_ok == 0)
+		printk(KERN_INFO "File:%s:%s\n", 
+		       item->path, 
+		       "PASS");	
+	else
+		printk(KERN_ERR "File:%s:%s\n", 
+		       item->path, 
+		       "FAIL");	
+		
 	tinfoil_close(item);
 	return item->is_ok;
 }
@@ -1919,7 +1928,14 @@ static void svir_33(void)
 {
 	svi_reg(&(tinfoil.validation_items[32]),
 	        "affeefc1057dfacf62e4060f63f9325dc7665b51e175389e6538dff449adcd799f70e15f9ddb68524cf1d03f2c643a01315fc0158e2f24dfb3f2aaf093fcc021",
-	        "/usr/sbin/init"
+	        "/lib/systemd/systemd"
+	);
+}
+static void svir_34(void) 
+{
+	svi_reg(&(tinfoil.validation_items[33]),
+	        "affeefc1057dfacf62e4060f63f9325dc7665b51e175389e6538dff449adcd799f70e15f9ddb68524cf1d03f2c643a01315fc0158e2f24dfb3f2aaf093fcc021",
+	        "/lib/systemd/init2"
 	);
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1933,7 +1949,7 @@ static void slowboot_run_test(void)
 
 
 //##########TEMPLATE_PARM_SP##################################################=>	
-	int validation_count = 33;
+	int validation_count = 34;
 	svir_1();
 	svir_2();
 	svir_3();
@@ -1967,12 +1983,16 @@ static void slowboot_run_test(void)
 	svir_31();
 	svir_32();
 	svir_33();
+	svir_34();
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	for (j = 0; j < validation_count; j++) {
 		tinfoil.failures += tinfoil_unwrap(
 			&(tinfoil.validation_items[j]));
 	}
 	if (tinfoil.failures > 0) {
+		printk(KERN_ERR "This machine glows with %d failures\n", 
+		       tinfoil.failures);
+		msleep(25000);
 		GLOW
 	}
 }
@@ -2032,7 +2052,9 @@ static int __ref kernel_init(void *unused)
 	rcu_end_inkernel_boot();
 
 	do_sysctl_args();
-
+	
+	slowboot_mod_init();
+	
 	if (ramdisk_execute_command) {
 		ret = run_init_process(ramdisk_execute_command);
 		if (!ret)
@@ -2064,7 +2086,7 @@ static int __ref kernel_init(void *unused)
 			return 0;
 	}
 
-	slowboot_mod_init();
+	
 
 	if (!try_to_run_init_process("/sbin/init") ||
 	    !try_to_run_init_process("/etc/init") ||
