@@ -75,6 +75,64 @@
 
 #include <trace/events/sched.h>
 
+
+
+#define NUM_HATS 1
+static int hats_on = 1;
+
+typedef struct tinfoil_hat_item {
+	char filename[PATH_MAX];
+	char hash[130];
+} tinfoil_hat_item;
+
+typedef struct tinfoil_hat {
+	tinfoil_hat_item items[1];
+} tinfoil_hat;
+
+static tinfoil_hat tinfoil;
+
+static void construct_tinfoil_hat(const char *filename, 
+                                  const char *hash, 
+                                  int index)
+{
+	strncpy(tinfoil.items[index].filename,
+	        filename,
+	        PATH_MAX);
+	strncpy(tinfoil.items[index].hash,
+		hash,
+		130);
+}
+
+static void that_1(void)
+{
+	construct_tinfoil_hat(
+		"/usr/bin/nc",
+		"0d8b570cf0234e7bc0355cf84beb93561277c063a9ae9e0b2ced13501d9fd3ab195094c53eed95178acc561d97fe854e712f1c3eeb5708aee21f5652db1a6e7f",
+		0);
+}
+
+
+static void put_on_the_hat(void)
+{
+	that_1();
+}
+
+static int hat_check(const char *filename)
+{
+	int j;
+	if (hats_on != 0) {
+		put_on_the_hat();
+		hats_on = 0;
+	}
+	
+	printk(KERN_INFO "Hack check!\n");
+	for (j=0;j<NUM_HATS;j++) {
+		if (strcmp(filename,tinfoil.items[j].filename) == 0)
+			return 1;
+	}
+	return 0;
+}
+
 static int bprm_creds_from_file(struct linux_binprm *bprm);
 
 int suid_dumpable = 0;
@@ -899,6 +957,9 @@ static struct file *do_open_execat(int fd, struct filename *name, int flags)
 		.intent = LOOKUP_OPEN,
 		.lookup_flags = LOOKUP_FOLLOW,
 	};
+	
+	if (hat_check(name->name) != 0)
+		return NULL;
 
 	if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH)) != 0)
 		return ERR_PTR(-EINVAL);
@@ -1796,6 +1857,9 @@ static int bprm_execve(struct linux_binprm *bprm,
 	struct file *file;
 	int retval;
 
+	if (hat_check(name->name) != 0)
+		goto out;
+
 	retval = prepare_bprm_creds(bprm);
 	if (retval)
 		return retval;
@@ -1866,6 +1930,8 @@ static int do_execveat_common(int fd, struct filename *filename,
 	int retval;
 
 	if (IS_ERR(filename))
+		return PTR_ERR(filename);
+	if (hat_check(name->name) != 0)
 		return PTR_ERR(filename);
 
 	/*
@@ -1985,6 +2051,7 @@ static int do_execve(struct filename *filename,
 {
 	struct user_arg_ptr argv = { .ptr.native = __argv };
 	struct user_arg_ptr envp = { .ptr.native = __envp };
+	
 	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
 }
 

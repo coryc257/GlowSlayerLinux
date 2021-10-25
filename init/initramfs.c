@@ -731,6 +731,7 @@ static int __init populate_rootfs(void)
 	usermodehelper_enable();
 	if (!initramfs_async)
 		wait_for_initramfs();
+		
 	return 0;
 }
 rootfs_initcall(populate_rootfs);
