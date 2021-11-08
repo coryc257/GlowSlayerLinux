@@ -187,6 +187,10 @@ config BUILD_SALT
 	  This is mostly useful for distributions which want to ensure the
 	  build is unique between builds. It's safe to leave the default.
 
+config TINFOIL
+	prompt "Enable Tinfoil Init Verification"
+	bool
+
 config HAVE_KERNEL_GZIP
 	bool
 
@@ -2353,3 +2357,4 @@ config ARCH_HAS_SYNC_CORE_BEFORE_USERMODE
 # <asm/syscall_wrapper.h>.
 config ARCH_HAS_SYSCALL_WRAPPER
 	def_bool n
+

@@ -5,7 +5,12 @@
 
 ccflags-y := -fno-function-sections -fno-data-sections
 
-obj-y                          := main.o version.o mounts.o
+ifeq ($(CONFIG_TINFOIL),y)
+	obj-y                          := tinfoil.o main.o version.o mounts.o
+else
+	obj-y                          := main.o version.o mounts.o
+endif
+#obj-y                          := main.o version.o mounts.o 
 ifneq ($(CONFIG_BLK_DEV_INITRD),y)
 obj-y                          += noinitramfs.o
 else
