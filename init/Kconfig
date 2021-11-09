@@ -187,9 +187,55 @@ config BUILD_SALT
 	  This is mostly useful for distributions which want to ensure the
 	  build is unique between builds. It's safe to leave the default.
 
-config TINFOIL
-	prompt "Enable Tinfoil Init Verification"
-	bool
+menu "Tinfoil Cryptographic Init Verification"	
+	config TINFOIL
+		prompt "Enable Tinfoil Init Verification"
+		bool
+	config TINFOIL_CF
+		prompt "Tinfoil Config File(must be visible at boot)"
+		string
+		depends on TINFOIL
+	config TINFOIL_CFS
+		prompt "Tinfoil Config File Signature File (must be visible at boot)"
+		string
+		depends on TINFOIL
+	config TINFOIL_PK
+		prompt "Tinfoil Public Key (Hex String Literal)"
+		string
+		depends on TINFOIL
+	config TINFOIL_PKLEN
+		prompt "Tinfoil Public Key Length (Of Hex, maybe <1052>)"
+		int
+		depends on TINFOIL
+	config TINFOIL_DGLEN
+		prompt "Digest Length for validation (sha512 is <64>)"
+		int
+		depends on TINFOIL
+	config TINFOIL_HSLEN
+		prompt "Digest Has Length in Hex (sha512 is <128>)"
+		int
+		depends on TINFOIL
+	config TINFOIL_PKALGO
+		prompt "Algorithm used for verification <rsa>"
+		string
+		depends on TINFOIL
+	config TINFOIL_PKALGOPD
+		prompt "Algorithm with padding <pkcs1pad(rsa,%s)>"
+		string
+		depends on TINFOIL
+	config TINFOIL_HSALGO
+		prompt "Hash Algorithm <sha512>"
+		string
+		depends on TINFOIL
+	config TINFOIL_IDTYPE
+		prompt "Signature ID Type <X509>"
+		string
+		depends on TINFOIL
+	config TINFOIL_BUG
+		prompt "Bug on Fail"
+		bool
+		depends on TINFOIL
+endmenu
 
 config HAVE_KERNEL_GZIP
 	bool
